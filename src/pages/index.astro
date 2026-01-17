@@ -3,23 +3,107 @@ import BaseHead from '../components/BaseHead.astro';
 import Footer from '../components/Footer.astro';
 import Header from '../components/Header.astro';
 import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
+
+import { getCollection } from 'astro:content';
+
+const posts = (await getCollection('blog'))
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+  .slice(0, 3);
 ---
 
 <!doctype html>
 <html lang="en">
-	<head>
-		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
-	</head>
-	<body>
-		<Header />
-		<main>
-			<h1>Hi there!</h1>
-			<p>
-				Welcome to my blog.<br>
-				This blog is where I organize what I learn through work and self-study,
-				not only in engineering, but also in life.
-			</p>
-		</main>
-		<Footer />
-	</body>
+  <head>
+    <BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
+  </head>
+  <body>
+    <Header />
+
+    <main class="container">
+      <section class="hero">
+        <h1>Hi there!</h1>
+        <p>
+          このブログでは、業務や自学習を通して学んだことに加えて、エンジニアリング以外のライフログも含めて、ゆるく発信していくことを目的としています。
+        </p>
+      </section>
+
+      <section class="latest">
+        <div class="latest-head">
+          <h2>最近の投稿</h2>
+          <a class="see-all" href="/blog">すべて見る →</a>
+        </div>
+
+        <div class="cards">
+          {posts.map((post) => (
+            <article class="card">
+              <a class="card-link" href={`/blog/${post.id.replace(/\.mdx?$/, '')}/`}>
+                <div class="meta">
+                  <time datetime={post.data.pubDate.toISOString()}>
+                    {post.data.pubDate.toLocaleDateString('ja-JP')}
+                  </time>
+                  {post.data.updatedDate && (
+                    <span class="updated">
+                      （更新: {post.data.updatedDate.toLocaleDateString('ja-JP')}）
+                    </span>
+                  )}
+                </div>
+
+                <h3>{post.data.title}</h3>
+              </a>
+            </article>
+          ))}
+        </div>
+      </section>
+    </main>
+
+    <Footer />
+  </body>
 </html>
+
+<style>
+  .container {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 2rem 1rem 4rem;
+  }
+  .hero h1 { margin: 0 0 0.5rem; }
+  .hero p { margin: 0; opacity: 0.9; line-height: 1.8; }
+
+  .latest { margin-top: 2.5rem; }
+  .latest-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+  .see-all { text-decoration: none; opacity: 0.8; }
+  .see-all:hover { opacity: 1; }
+
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+  }
+  .card {
+    border: 1px solid rgba(var(--black), 0.08);
+    border-radius: 14px;
+    background: white;
+    box-shadow: 0 2px 10px rgba(var(--black), 0.04);
+    overflow: hidden;
+  }
+  .card-link {
+    display: block;
+    padding: 1rem;
+    text-decoration: none;
+    color: inherit;
+  }
+  .meta { font-size: 0.85rem; opacity: 0.7; margin-bottom: 0.5rem; }
+  .updated { margin-left: 0.5rem; }
+  .card h3 { margin: 0 0 0.5rem; font-size: 1.05rem; line-height: 1.4; }
+  .card p { margin: 0; opacity: 0.85; line-height: 1.7; }
+
+  @media (max-width: 900px) {
+    .cards { grid-template-columns: 1fr; }
+  }
+</style>
